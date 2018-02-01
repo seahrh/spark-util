@@ -34,4 +34,4 @@ wartremoverErrors ++= Warts.allBut(
 )
 fork in Test := true
 parallelExecution in Test := false
-javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+javaOptions ++= Seq("-Xms512M", "-Xmx2048M", "-XX:+CMSClassUnloadingEnabled")
