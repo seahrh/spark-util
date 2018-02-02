@@ -5,7 +5,7 @@ import org.apache.spark.sql.DataFrame
 
 package object sparkutil extends LazyLogging {
 
-  def union(left: DataFrame, right: DataFrame): DataFrame = {
+  private def union(left: DataFrame, right: DataFrame): DataFrame = {
     val cols: Array[String] = left.columns
     val res: DataFrame = left.union(right.select(cols.head, cols.tail: _*))
     logger.debug(
