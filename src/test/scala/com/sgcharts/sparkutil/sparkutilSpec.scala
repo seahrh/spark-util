@@ -53,10 +53,7 @@ class sparkutilSpec extends FlatSpec with DataFrameSuiteBase {
   it should "return DF with the same schema as the first operand" in {
     val a: DataFrame = Seq.empty[SchemaA].toDF
     val b: DataFrame = Seq.empty[SchemaB].toDF
-    val c: DataFrame = Seq.empty[SchemaC].toDF
-    assertDataFrameEquals(a, union(a, b, c))
-    assertDataFrameEquals(c, union(c, a, b))
-    assertDataFrameEquals(b, union(b, c, a))
+    assertDataFrameEquals(a, union(a, b))
   }
 }
 

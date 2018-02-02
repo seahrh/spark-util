@@ -30,7 +30,8 @@ wartremoverErrors ++= Warts.allBut(
   Wart.TraversableOps,
   Wart.ImplicitParameter,
   Wart.NonUnitStatements,
-  Wart.Var
+  Wart.Var,
+  Wart.Overloading
 )
 fork in Test := true
 parallelExecution in Test := false
