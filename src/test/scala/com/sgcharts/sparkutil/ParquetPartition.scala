@@ -22,22 +22,12 @@ sealed trait TDailyPartition[T] extends ParquetPartition[T] {
   }
 }
 
-final case class DailyPartition[T](
-                              override val spark: SparkSession,
-                              override val table: String,
-                              override val tablePath: String,
-                              override val ds: Dataset[T],
-                              override val date: String
-                            ) extends TDailyPartition[T]
-
-final case class DailyCountryPartition[T](
-                                    override val spark: SparkSession,
-                                    override val table: String,
-                                    override val tablePath: String,
-                                    override val ds: Dataset[T],
-                                    override val date: String,
-                                    country: String
-                                  ) extends TDailyPartition[T] {
+/**
+  * Example of multiple partition columns
+  * @tparam T dataset of type T
+  */
+sealed trait TDailyCountryPartition[T] extends TDailyPartition[T] {
+  val country: String
 
   override def spec: String = s"""${super.spec},country="$country""""
 
@@ -54,13 +44,8 @@ final case class DailyCountryPartition[T](
   }
 }
 
-final case class HourlyPartition[T](
-                              override val spark: SparkSession,
-                              override val table: String,
-                              override val tablePath: String,
-                              override val ds: Dataset[T],
-                              hour: String
-                            ) extends ParquetPartition[T] {
+sealed trait THourlyPartition[T] extends ParquetPartition[T] {
+  val hour: String
 
   override def spec: String = s"""hour="$hour""""
 
@@ -76,3 +61,28 @@ final case class HourlyPartition[T](
     addPartition()
   }
 }
+
+final case class DailyPartition[T](
+                                    override val spark: SparkSession,
+                                    override val table: String,
+                                    override val tablePath: String,
+                                    override val ds: Dataset[T],
+                                    override val date: String
+                                  ) extends TDailyPartition[T]
+
+final case class DailyCountryPartition[T](
+                                           override val spark: SparkSession,
+                                           override val table: String,
+                                           override val tablePath: String,
+                                           override val ds: Dataset[T],
+                                           override val date: String,
+                                           override val country: String
+                                         ) extends TDailyCountryPartition[T]
+
+final case class HourlyPartition[T](
+                                     override val spark: SparkSession,
+                                     override val table: String,
+                                     override val tablePath: String,
+                                     override val ds: Dataset[T],
+                                     override val hour: String
+                                   ) extends THourlyPartition[T]
