@@ -4,7 +4,7 @@ import org.apache.spark.sql.{Dataset, SaveMode, SparkSession}
 
 trait ParquetPartition[T] extends UnmanagedTablePartition[T]
 
-case class DailyPartition[T](
+final case class DailyPartition[T](
                               override val spark: SparkSession,
                               override val table: String,
                               override val tablePath: String,
@@ -12,7 +12,7 @@ case class DailyPartition[T](
                               date: String
                             ) extends ParquetPartition[T] {
 
-  override def spec: String = s"date=\"$date\""
+  override def spec: String = s"""date="$date""""
 
   override def path: String = s"$tablePath/date=$date"
 
@@ -27,7 +27,7 @@ case class DailyPartition[T](
   }
 }
 
-case class HourlyPartition[T](
+final case class HourlyPartition[T](
                               override val spark: SparkSession,
                               override val table: String,
                               override val tablePath: String,
@@ -35,7 +35,7 @@ case class HourlyPartition[T](
                               hour: String
                             ) extends ParquetPartition[T] {
 
-  override def spec: String = s"hour=\"$hour\""
+  override def spec: String = s"""hour="$hour""""
 
   override def path: String = s"$tablePath/hour=$hour"
 
