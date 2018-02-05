@@ -31,7 +31,9 @@ wartremoverErrors ++= Warts.allBut(
   Wart.ImplicitParameter,
   Wart.NonUnitStatements,
   Wart.Var,
-  Wart.Overloading
+  Wart.Overloading,
+  Wart.MutableDataStructures,
+  Wart.Nothing // in sc.parallelize
 )
 fork in Test := true
 parallelExecution in Test := false
