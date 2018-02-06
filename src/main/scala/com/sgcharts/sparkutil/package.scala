@@ -18,11 +18,12 @@ package object sparkutil extends LazyLogging {
   }
 
   /**
-    * Dataframe workaround for dataset union bug
+    * DataFrame workaround for Dataset union bug.
+    * Union is performed in order of the operands.
     * @see [[https://issues.apache.org/jira/browse/SPARK-21109]]
-    * @param head first dataframe
-    * @param tail iterable of dataframes
-    * @return
+    * @param head first DataFrame
+    * @param tail varargs of successive DataFrames
+    * @return new DataFrame representing the union
     */
   def union(head: DataFrame, tail: DataFrame*): DataFrame = {
     val dfs: List[DataFrame] = head :: tail.toList

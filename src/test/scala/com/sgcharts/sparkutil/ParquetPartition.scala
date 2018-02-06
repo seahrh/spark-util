@@ -11,6 +11,10 @@ sealed trait TDailyPartition[T] extends ParquetPartition[T] {
 
   override def path: String = s"$tablePath/date=$date"
 
+  /**
+    * Persist as parquet file instead of calling saveAsTable method.
+    * @see [[https://issues.apache.org/jira/browse/SPARK-14927]]
+    */
   override def overwrite(): Unit = {
     writer(SaveMode.Overwrite).partitionBy("date").parquet(tablePath)
     addPartition()

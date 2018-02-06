@@ -90,4 +90,11 @@ class CountAccumulatorSpec extends FlatSpec with SharedSparkContext {
     sc.parallelize(in).foreach(x => a.add(x))
     assertResult(e)(a.value)
   }
+
+  it should "return empty map if input RDD is empty" in {
+    val a = CountAccumulator[String](sc, Option("CountAccumulatorSpec"))
+    val e = SortedMap[String, Long]()
+    sc.parallelize(Array[String]()).foreach(x => a.add(x))
+    assertResult(e)(a.value)
+  }
 }

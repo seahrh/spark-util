@@ -40,6 +40,16 @@ final case class CountAccumulator[T: Ordering](
 }
 
 object CountAccumulator {
+
+  /**
+    * Factory method with different signature from [[CountAccumulator]] case class.
+    * This will register the accumulator with Spark before returning a new instance.
+    *
+    * @param sc SparkContext
+    * @param name accumulator name shown on SPark UI
+    * @tparam T key of type T
+    * @return CountAccumulator
+    */
   def apply[T: Ordering](sc: SparkContext, name: Option[String]): CountAccumulator[T] = {
     val a = CountAccumulator[T]()
     name match {
