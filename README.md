@@ -16,3 +16,7 @@ val ds3: Dataset[MyCaseClass] = ???
 import spark.implicits._
 val res: Dataset[MyCaseClass] = union(ds1.toDF, ds2.toDF, ds3.toDF).as[MyCaseClass]
 ```
+## DataFrame#saveAsTable bug when saving Hive partitions
+Hive partitions written by the DataFrame#saveAsTable API, are not registered in the Hive metastore ([SPARK-14927](https://issues.apache.org/jira/browse/SPARK-14927)). Hence the partitions are not accessible in Hive.
+
+Instead of `saveAsTable`, use the "partitionBy, format" idiom when 
