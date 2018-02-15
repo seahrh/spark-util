@@ -17,7 +17,7 @@ import spark.implicits._
 val res: Dataset[MyCaseClass] = union(ds1.toDF, ds2.toDF, ds3.toDF).as[MyCaseClass]
 ```
 ## DataFrameWriter#saveAsTable bug when saving Hive partitions
-Hive partitions written by the [DataFrameWriter](https://spark.apache.org/docs/2.2.0/api/scala/index.html#org.apache.spark.sql.DataFrameWriter)#saveAsTable API, are not registered in the Hive metastore ([SPARK-14927](https://issues.apache.org/jira/browse/SPARK-14927)). Hence the partitions are not accessible in Hive.
+Hive partitions written by the [`DataFrameWriter`](https://spark.apache.org/docs/2.2.0/api/scala/index.html#org.apache.spark.sql.DataFrameWriter)`#saveAsTable` API, are not registered in the Hive metastore ([SPARK-14927](https://issues.apache.org/jira/browse/SPARK-14927)). Hence the partitions are not accessible in Hive.
 
 Instead of `saveAsTable`, save the output file and register the partition explicitly
 - `partitionBy` saves the output files in a directory layout similar to Hive's partitioning scheme 
@@ -26,7 +26,7 @@ Instead of `saveAsTable`, save the output file and register the partition explic
 - Call the API corresponding to file format e.g. `parquet`, `orc`, `json`
 - Register the Hive partition with Spark SQL
 
-`TablePartition` contains a `Dataset` to be written to a *single* partition. You can get a `DataFrameWriter` by calling `writer` and specify the number of files per partition. By default, one file per partition. Use the `DataFrameWriter` to implement the `overwrite` and `append` methods. 
+`TablePartition` contains a `Dataset` to be written to a *single* partition. You can get a `DataFrameWriter` by calling `writer`. Optionally, specify the number of files per partition (default=1). Use the `DataFrameWriter` to implement the `overwrite` and `append` methods. 
 ```scala
 import com.sgcharts.sparkutil.TablePartition
 
