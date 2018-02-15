@@ -26,8 +26,21 @@ Instead of `saveAsTable`, save the output file and register the partition explic
 - Call the API corresponding to file format e.g. `parquet`, `orc`, `json`
 - Register the Hive partition with Spark SQL
 
-`TablePartition` contains a `Dataset` to be written to a *single* partition. You can get a `DataFrameWriter` by calling `writer`. Optionally, specify the number of files per partition (default=1). Use the `DataFrameWriter` to implement the `overwrite` and `append` methods. 
+[`TablePartition`](src/main/scala/com/sgcharts/sparkutil/TablePartition.scala) contains a `Dataset` to be written to a *single* partition. Get a `DataFrameWriter` by calling `writer`. Optionally, set the number of files per partition (default=1). Use the `DataFrameWriter` to implement the `overwrite` and `append` methods. 
 ```scala
 import com.sgcharts.sparkutil.TablePartition
+import org.apache.spark.sql.SaveMode
 
+// Extend TablePartition
+
+override def overwrite(): Unit = {
+  writer(SaveMode.Overwrite).partitionBy("date", "country").parquet(tablePath)
+  addPartition()
+}
+
+override def append(): Unit = {
+  writer(SaveMode.Append).partitionBy("date", "country").parquet(tablePath)
+  addPartition()
+}
 ```
+See [`ParquetPartition`](src/test/scala/com/sgcharts/sparkutil/ParquetPartition.scala) for a complete example.
