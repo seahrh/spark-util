@@ -44,3 +44,18 @@ override def append(): Unit = {
 }
 ```
 See [`ParquetPartition`](src/test/scala/com/sgcharts/sparkutil/ParquetPartition.scala) for a complete example.
+## Count arbitrary objects that have natual ordering
+[`CountAccumulator`](src/main/scala/com/sgcharts/sparkutil/CountAccumulator.scala) extends [`org.apache.spark.util.AccumulatorV2`](https://spark.apache.org/docs/2.2.0/api/java/org/apache/spark/util/AccumulatorV2.html). It can count any key that implements [`Ordering`](http://www.scala-lang.org/api/2.12.0/scala/math/Ordering.html). The accumulator returns a [`SortedMap`](http://www.scala-lang.org/api/2.12.3/scala/collection/immutable/SortedMap.html) of the keys and their counts.
+
+`CountAccumulator` automatically registers the accumulator with `SparkContext`.
+```scala
+import org.apache.spark.SparkContext
+import com.sgcharts.sparkutil.CountAccumulator
+
+val sc: SparkContext = ???
+val a = CountAccumulator[String](sc, Option("my accumulator name")) // Counting String keys
+val df: DataFrame = ???
+df.foreach(x => a.add(x))
+val result: SortedMap[String, Long] = a.value
+```
+See [CountAccumulatorSpec](test/scala/com/sgcharts/sparkutil/CountAccumulatorSpec.scala) for more examples.
