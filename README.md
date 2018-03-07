@@ -47,6 +47,8 @@ See [`ParquetPartition`](src/test/scala/com/sgcharts/sparkutil/ParquetPartition.
 ## Count by key
 [`CountAccumulator`](src/main/scala/com/sgcharts/sparkutil/CountAccumulator.scala) extends [`org.apache.spark.util.AccumulatorV2`](https://spark.apache.org/docs/2.2.0/api/java/org/apache/spark/util/AccumulatorV2.html). It can count any key that implements [`Ordering`](http://www.scala-lang.org/api/2.12.0/scala/math/Ordering.html). The accumulator returns a [`SortedMap`](http://www.scala-lang.org/api/2.12.3/scala/collection/immutable/SortedMap.html) of the keys and their counts.
 
+Unlike `HashMap`, `SortedMap` uses [`compareTo`](https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html) instead of `equals` to determine whether two keys are the same. For example, consider the `BigDecimal` class whose `compareTo` method is inconsistent with `equals`. If only two keys `BigDecimal("1.0")` and `BigDecimal("1.00")` exist, the resulting `SortedMap` will contain only one entry because the two keys are equal when compared using the `compareTo` method. 
+
 On creation, `CountAccumulator` automatically registers the accumulator with `SparkContext`.
 ```scala
 import org.apache.spark.SparkContext
