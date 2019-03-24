@@ -1,3 +1,5 @@
+[![buildstatus](https://travis-ci.org/seahrh/spark-util.svg?branch=master)](https://travis-ci.org/seahrh/spark-util)
+
 # spark-util
 Tiny Spark utility for common use cases and bug workarounds. Unit tested on Spark 2.2.
 ## Dataset union bug
@@ -63,3 +65,17 @@ val result: SortedMap[String, Long] = a.value
 See [CountAccumulatorSpec](src/test/scala/com/sgcharts/sparkutil/CountAccumulatorSpec.scala) for more examples.
 
 Based on [hammerlab's](https://github.com/hammerlab/spark-util) `spark-util`.
+## Logging
+Spark uses log4j (not logback).
+
+Writes to console `stderr` (default `log4j.properties` in spark/conf)
+
+Use
+```scala
+import com.sgcharts.sparkutil.Log4jLogging
+
+object MySparkApp extends Log4jLogging {
+    log.info("Hello World!")
+}
+```
+See https://stackoverflow.com/questions/29208844/apache-spark-logging-within-scala
