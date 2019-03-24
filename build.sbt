@@ -10,8 +10,6 @@ lazy val root = (project in file(".")).
       "org.scalatest" %% "scalatest" % versions.scalatest % Test,
       "org.apache.spark" %% "spark-sql" % versions.spark % Provided,
       "org.apache.spark" %% "spark-hive" % versions.spark % Test,
-      "ch.qos.logback" % "logback-classic" % versions.logback,
-      "com.typesafe.scala-logging" %% "scala-logging-slf4j" % versions.scalaLogging,
       "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
     )
   )

@@ -1,14 +1,13 @@
 package com.sgcharts
 
-import com.typesafe.scalalogging.slf4j.LazyLogging
 import org.apache.spark.sql.DataFrame
 
-package object sparkutil extends LazyLogging {
+package object sparkutil extends Log4jLogging {
 
   private def union(left: DataFrame, right: DataFrame): DataFrame = {
     val cols: Array[String] = left.columns
     val res: DataFrame = left.union(right.select(cols.head, cols.tail: _*))
-    logger.debug(
+    log.debug(
       s"""
          |Left schema ${left.schema.treeString}
          |Right schema ${right.schema.treeString}
