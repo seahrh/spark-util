@@ -16,11 +16,11 @@ lazy val root = (project in file(".")).
     )
   )
 lazy val versions = new {
-  val scalatest = "3.0.5"
-  val spark = "2.2.1"
+  val scalatest = "3.0.7"
+  val spark = "2.2.2"
   val logback = "1.2.3"
   val scalaLogging = "2.1.2"
-  val sparkTestingBase = "2.2.0_0.8.0"
+  val sparkTestingBase = "2.2.2_0.11.0"
 }
 wartremoverErrors ++= Warts.allBut(
   Wart.ToString,
