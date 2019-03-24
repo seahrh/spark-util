@@ -1,3 +1,5 @@
+[![buildstatus](https://travis-ci.org/seahrh/spark-util.svg?branch=master)](https://travis-ci.org/seahrh/spark-util)
+
 # spark-util
 Tiny Spark utility for common use cases and bug workarounds. Unit tested on Spark 2.2.
 ## Dataset union bug
