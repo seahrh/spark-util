@@ -3,7 +3,7 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       organization := "com.sgcharts",
       scalaVersion := "2.11.12",
-      version      := "0.2.0"
+      version      := "0.3.0"
     )),
     name := "spark-util",
     libraryDependencies ++= Seq(
