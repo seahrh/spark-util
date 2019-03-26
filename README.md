@@ -19,39 +19,44 @@ import spark.implicits._
 val res: Dataset[MyCaseClass] = union(ds1.toDF, ds2.toDF, ds3.toDF).as[MyCaseClass]
 ```
 ## DataFrameWriter#saveAsTable bug when saving Hive partitions
-Hive partitions written by the [`DataFrameWriter`](https://spark.apache.org/docs/2.2.0/api/scala/index.html#org.apache.spark.sql.DataFrameWriter)`#saveAsTable` API, are not registered in the Hive metastore ([SPARK-14927](https://issues.apache.org/jira/browse/SPARK-14927)). Hence the partitions are not accessible in Hive.
+Hive partitions written by the [`DataFrameWriter`](https://spark.apache.org/docs/2.2.0/api/scala/index.html#org.apache.spark.sql.DataFrameWriter)`#saveAsTable` API, are not registered in the Hive metastore ([SPARK-14927](https://issues.apache.org/jira/browse/SPARK-14927)). Hence the partitions are not accessible in Hive. 
 
-Instead of `saveAsTable`, save the output file and register the partition explicitly
-- `partitionBy` saves the output files in a directory layout similar to Hive's partitioning scheme 
+As of Spark 2.3.1, the `DataFrameWriter` API is still bugged out, with the `insertInto` and `saveAsTable` giving different problems on Hive. For example, `saveAsTable` will always overwrite existing partitions, effectively allowing only one partition to exist at any one time. 
 
-   e.g. if partition columns are year and month, `year=2016/month=01/`
-- Call the API corresponding to file format e.g. `parquet`, `orc`, `json`
-- Register the Hive partition with Spark SQL
+Solution: Instead of using the `saveAsTable` API, register the partition explicitly.
 
-[`TablePartition`](src/main/scala/com/sgcharts/sparkutil/TablePartition.scala) contains a `Dataset` to be written to a *single* partition. Get a `DataFrameWriter` by calling `writer`. Optionally, set the number of files per partition (default=1). Use the `DataFrameWriter` to implement the `overwrite` and `append` methods. 
+[`TablePartition`](src/main/scala/com/sgcharts/sparkutil/TablePartition.scala) contains a `Dataset` to be written to a *single* partition. Optionally, set the number of files to write per partition (default=1).
+
+Usage: how to save a single partition of a Parquet table
 ```scala
-import com.sgcharts.sparkutil.TablePartition
-import org.apache.spark.sql.SaveMode
+import com.sgcharts.sparkutil.ParquetTablePartition
 
-// Extend TablePartition
+val ds: Dataset[MyTableSchema] = ???
 
-override def overwrite(): Unit = {
-  writer(SaveMode.Overwrite).partitionBy("date", "country").parquet(tablePath)
-  addPartition()
-}
+val part = ParquetTablePartition[MyTableSchema](
+  ds=ds,
+  db="mydb",
+  table="mytable",
+  path="/hive/warehouse/mydb.db/mytable/ds=20181231/country=sg",
+  partition="ds='20181231',country='sg'"
+)
 
-override def append(): Unit = {
-  writer(SaveMode.Append).partitionBy("date", "country").parquet(tablePath)
-  addPartition()
-}
+// Overwrite partition
+part.overwrite()
+
+// Or append data to an existing partition
+part.append()
+
 ```
-See [`ParquetPartition`](src/test/scala/com/sgcharts/sparkutil/ParquetPartition.scala) for a complete example.
+
 ## Count by key
 [`CountAccumulator`](src/main/scala/com/sgcharts/sparkutil/CountAccumulator.scala) extends [`org.apache.spark.util.AccumulatorV2`](https://spark.apache.org/docs/2.2.0/api/java/org/apache/spark/util/AccumulatorV2.html). It can count any key that implements [`Ordering`](http://www.scala-lang.org/api/2.12.0/scala/math/Ordering.html). The accumulator returns a [`SortedMap`](http://www.scala-lang.org/api/2.12.3/scala/collection/immutable/SortedMap.html) of the keys and their counts.
 
 Unlike `HashMap`, `SortedMap` uses [`compareTo`](https://docs.oracle.com/javase/8/docs/api/java/lang/Comparable.html) instead of `equals` to determine whether two keys are the same. For example, consider the `BigDecimal` class whose `compareTo` method is inconsistent with `equals`. If only two keys `BigDecimal("1.0")` and `BigDecimal("1.00")` exist, the resulting `SortedMap` will contain only one entry because the two keys are equal when compared using the `compareTo` method. 
 
 On creation, `CountAccumulator` automatically registers the accumulator with `SparkContext`.
+
+Usage
 ```scala
 import org.apache.spark.SparkContext
 import com.sgcharts.sparkutil.CountAccumulator
@@ -70,7 +75,7 @@ Spark uses log4j (not logback).
 
 Writes to console `stderr` (default `log4j.properties` in spark/conf)
 
-Use
+Usage
 ```scala
 import com.sgcharts.sparkutil.Log4jLogging
 
