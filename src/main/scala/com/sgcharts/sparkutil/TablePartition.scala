@@ -24,9 +24,6 @@ sealed trait TablePartition[T] extends Log4jLogging {
     * Convenience method to get a [[org.apache.spark.sql.DataFrameWriter]].
     * By default, write one file per partition.
     *
-    * DataFrameWrite API is still bugged as at 2.3.1,
-    * `insertInto` and `saveAsTable` give different problems with hive
-    *
     * @param mode     Writer mode e.g. overwrite, append
     * @return DataFrameWriter
     */
