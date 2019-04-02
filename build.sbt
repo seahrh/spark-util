@@ -3,7 +3,7 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       organization := "com.sgcharts",
       scalaVersion := "2.11.12",
-      version      := "0.3.0"
+      version      := "0.3.1"
     )),
     name := "spark-util",
     libraryDependencies ++= Seq(
@@ -15,8 +15,8 @@ lazy val root = (project in file(".")).
   )
 lazy val versions = new {
   val scalatest = "3.0.7"
-  val spark = "2.2.2"
-  val sparkTestingBase = "2.2.2_0.11.0"
+  val spark = "2.4.0"
+  val sparkTestingBase = "2.4.0_0.11.0"
 }
 wartremoverErrors ++= Warts.allBut(
   Wart.ToString,
