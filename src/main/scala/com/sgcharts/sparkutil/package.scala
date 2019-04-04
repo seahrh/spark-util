@@ -1,6 +1,9 @@
 package com.sgcharts
 
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.types.StructType
+import scala.collection.JavaConverters._
 
 package object sparkutil extends Log4jLogging {
 
@@ -27,5 +30,22 @@ package object sparkutil extends Log4jLogging {
   def union(head: DataFrame, tail: DataFrame*): DataFrame = {
     val dfs: List[DataFrame] = head :: tail.toList
     dfs.reduceLeft(union)
+  }
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  def update(row: Row, fieldName: String, value: Any): Row = {
+    val i: Int = row.fieldIndex(fieldName)
+    val ovs = row.toSeq
+    var vs = ovs.slice(0, i) ++ Seq(value)
+    val size: Int = ovs.size
+    if (i != size - 1) {
+      vs ++= ovs.slice(i + 1, size)
+    }
+    new GenericRowWithSchema(vs.toArray, row.schema)
+  }
+
+  // based on https://stackoverflow.com/a/40801637/519951
+  def toDF(rows: Array[Row], schema: StructType)(implicit spark: SparkSession): DataFrame = {
+    spark.createDataFrame(rows.toList.asJava, schema)
   }
 }

@@ -10,6 +10,7 @@ lazy val root = (project in file(".")).
       "org.scalatest" %% "scalatest" % versions.scalatest % Test,
       "org.apache.spark" %% "spark-sql" % versions.spark % Provided,
       "org.apache.spark" %% "spark-hive" % versions.spark % Test,
+      "org.apache.spark" %% "spark-mllib" % versions.spark % Provided,
       "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
     )
   )
@@ -29,7 +30,8 @@ wartremoverErrors ++= Warts.allBut(
   Wart.Var,
   Wart.Overloading,
   Wart.MutableDataStructures,
-  Wart.Nothing // in sc.parallelize
+  Wart.Nothing, // in sc.parallelize
+  Wart.Equals // else != is disabled
 )
 fork in Test := true
 parallelExecution in Test := false
