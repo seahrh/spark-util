@@ -4,12 +4,12 @@ import org.apache.spark.ml
 import org.apache.spark.ml.feature._
 import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.{Pipeline, PipelineStage}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 import scala.collection.mutable.ArrayBuffer
 
 final case class Smote(
-                        sample: DataFrame,
+                        sample: Dataset[_],
                         discreteStringAttributes: Seq[String],
                         discreteLongAttributes: Seq[String],
                         continuousAttributes: Seq[String],
@@ -18,6 +18,11 @@ final case class Smote(
                         sizeMultiplier: Int = 2,
                         numNearestNeighbours: Int = 4
                       )(implicit spark: SparkSession) extends Log4jLogging {
+  require(sample.count != 0, "sample must not be empty")
+  require(numHashTables >= 1, "number of hash tables must be greater than or equals 1")
+  require(sizeMultiplier >= 2, "size multiplier must be greater than or equals 2")
+  require(numNearestNeighbours >= 1, "number of nearest neighbours must be greater than or equals 1")
+
   private val rand = new scala.util.Random
 
   private val featuresCol: String = "_smote_features"
@@ -25,8 +30,12 @@ final case class Smote(
   private val allAttributes: Seq[String] =
     discreteStringAttributes ++ discreteLongAttributes ++ continuousAttributes
 
+  require(allAttributes.nonEmpty, "there must be at least one attribute")
+
   private val blen: Double = bucketLength match {
-    case Some(x) => x
+    case Some(x) =>
+      require(x > 0, "bucket length must be greater than zero")
+      x
     case _ => LocalitySensitiveHashing.bucketLength(sample.count, allAttributes.length)
   }
 
