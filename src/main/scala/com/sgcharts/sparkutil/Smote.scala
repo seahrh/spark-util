@@ -86,33 +86,35 @@ final case class Smote(
     model.transform(sample)
   }
 
-  private[sparkutil] def child(left: Row, right: Row): Row = {
-    var res: Row = left
+  private def setContinuousAttribute(name: String, base: Row, neighbour: Row): Row = {
+    val lc: Double = base.getAs[Double](name)
+    val rc: Double = neighbour.getAs[Double](name)
+    val diff: Double = rc - lc
+    val gap: Double = rand.nextFloat()
+    val newValue: Double = lc + (gap * diff)
+    update(base, name, newValue)
+  }
+
+  private def setDiscreteAttribute[T](name: String, base: Row, neighbour: Row): Row = {
+    val ld = base.getAs[T](name)
+    val rd = neighbour.getAs[T](name)
+    val newValue = rand.nextInt(2) match {
+      case 0 => ld
+      case _ => rd
+    }
+    update(base, name, newValue)
+  }
+
+  private def syntheticExample(base: Row, neighbour: Row): Row = {
+    var res: Row = base
     for (c <- continuousAttributes) {
-      val lc: Double = left.getAs[Double](c)
-      val rc: Double = right.getAs[Double](c)
-      val diff: Double = rc - lc
-      val gap: Double = rand.nextFloat()
-      val newValue: Double = lc + (gap * diff)
-      res = update(res, c, newValue)
+      res = setContinuousAttribute(c, res, neighbour)
     }
     for (d <- discreteStringAttributes) {
-      val ld: String = left.getAs[String](d)
-      val rd: String = right.getAs[String](d)
-      val newValue: String = rand.nextInt(2) match {
-        case 0 => ld
-        case _ => rd
-      }
-      res = update(res, d, newValue)
+      res = setDiscreteAttribute[String](d, res, neighbour)
     }
     for (d <- discreteLongAttributes) {
-      val ld: Long = left.getAs[Long](d)
-      val rd: Long = right.getAs[Long](d)
-      val newValue: Long = rand.nextInt(2) match {
-        case 0 => ld
-        case _ => rd
-      }
-      res = update(res, d, newValue)
+      res = setDiscreteAttribute[Long](d, res, neighbour)
     }
     res
   }
@@ -135,7 +137,7 @@ final case class Smote(
       ).toDF().collect()
       for (_ <- 1 until sizeMultiplier) {
         val nn: Row = knn(rand.nextInt(knn.length))
-        res += child(row, nn)
+        res += syntheticExample(row, nn)
       }
     }
     toDF(res.toArray, schema).selectExpr(allAttributes: _*)
