@@ -13,15 +13,22 @@ final case class Smote(
                         discreteStringAttributes: Seq[String],
                         discreteLongAttributes: Seq[String],
                         continuousAttributes: Seq[String],
-                        bucketLength: Double,
+                        bucketLength: Option[Double] = None,
                         numHashTables: Int = 1,
                         sizeMultiplier: Int = 2,
                         numNearestNeighbours: Int = 4
                       )(implicit spark: SparkSession) extends Log4jLogging {
   private val rand = new scala.util.Random
+
   private val featuresCol: String = "_smote_features"
+
   private val allAttributes: Seq[String] =
     discreteStringAttributes ++ discreteLongAttributes ++ continuousAttributes
+
+  private val blen: Double = bucketLength match {
+    case Some(x) => x
+    case _ => LocalitySensitiveHashing.bucketLength(sample.count, allAttributes.length)
+  }
 
   private val stringIndexerOutputCols: Seq[String] = discreteStringAttributes.map { s =>
     s + "_indexed"
@@ -60,7 +67,7 @@ final case class Smote(
 
   private val lsh: BucketedRandomProjectionLSH = new BucketedRandomProjectionLSH()
     .setInputCol(featuresCol)
-    .setBucketLength(bucketLength)
+    .setBucketLength(blen)
     .setNumHashTables(numHashTables)
 
   private def transform(): DataFrame = {
