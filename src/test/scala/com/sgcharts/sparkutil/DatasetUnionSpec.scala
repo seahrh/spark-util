@@ -8,12 +8,6 @@ class DatasetUnionSpec extends FlatSpec with DataFrameSuiteBase {
 
   import spark.implicits._
 
-  private final case class SchemaA(s: String, i: Int, d: Double)
-
-  private final case class SchemaB(d: Double, s: String, i: Int)
-
-  private final case class SchemaC(i: Int, d: Double, s: String)
-
   "Union" should "perform union in the order of the operands" in {
     val a: DataFrame = Seq[SchemaA](
       SchemaA(s = "a1", i = 1, d = 1.1),
@@ -63,4 +57,8 @@ class DatasetUnionSpec extends FlatSpec with DataFrameSuiteBase {
   }
 }
 
+private final case class SchemaA(s: String, i: Int, d: Double)
 
+private final case class SchemaB(d: Double, s: String, i: Int)
+
+private final case class SchemaC(i: Int, d: Double, s: String)
