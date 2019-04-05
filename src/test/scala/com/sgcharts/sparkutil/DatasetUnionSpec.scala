@@ -4,9 +4,15 @@ import com.holdenkarau.spark.testing.DataFrameSuiteBase
 import org.apache.spark.sql.DataFrame
 import org.scalatest.FlatSpec
 
-class sparkutilSpec extends FlatSpec with DataFrameSuiteBase {
+class DatasetUnionSpec extends FlatSpec with DataFrameSuiteBase {
 
   import spark.implicits._
+
+  private final case class SchemaA(s: String, i: Int, d: Double)
+
+  private final case class SchemaB(d: Double, s: String, i: Int)
+
+  private final case class SchemaC(i: Int, d: Double, s: String)
 
   "Union" should "perform union in the order of the operands" in {
     val a: DataFrame = Seq[SchemaA](
@@ -57,8 +63,4 @@ class sparkutilSpec extends FlatSpec with DataFrameSuiteBase {
   }
 }
 
-final case class SchemaA(s: String, i: Int, d: Double)
 
-final case class SchemaB(d: Double, s: String, i: Int)
-
-final case class SchemaC(i: Int, d: Double, s: String)
