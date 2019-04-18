@@ -7,6 +7,7 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.Random
 
 final case class Smote(
                         sample: Dataset[_],
@@ -23,7 +24,7 @@ final case class Smote(
   require(sizeMultiplier >= 2, "size multiplier must be greater than or equals 2")
   require(numNearestNeighbours >= 1, "number of nearest neighbours must be greater than or equals 1")
 
-  private val rand = new scala.util.Random
+  private implicit val rand: Random = new Random
 
   private val featuresCol: String = "_smote_features"
 
@@ -86,35 +87,16 @@ final case class Smote(
     model.transform(sample)
   }
 
-  private def setContinuousAttribute(name: String, base: Row, neighbour: Row): Row = {
-    val lc: Double = base.getAs[Double](name)
-    val rc: Double = neighbour.getAs[Double](name)
-    val diff: Double = rc - lc
-    val gap: Double = rand.nextFloat()
-    val newValue: Double = lc + (gap * diff)
-    update(base, name, newValue)
-  }
-
-  private def setDiscreteAttribute[T](name: String, base: Row, neighbour: Row): Row = {
-    val ld = base.getAs[T](name)
-    val rd = neighbour.getAs[T](name)
-    val newValue = rand.nextInt(2) match {
-      case 0 => ld
-      case _ => rd
-    }
-    update(base, name, newValue)
-  }
-
   private def syntheticExample(base: Row, neighbour: Row): Row = {
     var res: Row = base
     for (c <- continuousAttributes) {
-      res = setContinuousAttribute(c, res, neighbour)
+      res = Smote.setContinuousAttribute(c, res, neighbour)
     }
     for (d <- discreteStringAttributes) {
-      res = setDiscreteAttribute[String](d, res, neighbour)
+      res = Smote.setDiscreteAttribute[String](d, res, neighbour)
     }
     for (d <- discreteLongAttributes) {
-      res = setDiscreteAttribute[Long](d, res, neighbour)
+      res = Smote.setDiscreteAttribute[Long](d, res, neighbour)
     }
     res
   }
@@ -142,5 +124,27 @@ final case class Smote(
     }
     toDF(res.toArray, schema).selectExpr(allAttributes: _*)
   }
+}
 
+object Smote {
+  private[sparkutil] def setContinuousAttribute(name: String, base: Row, neighbour: Row)
+                                               (implicit rand: Random): Row = {
+    val lc: Double = base.getAs[Double](name)
+    val rc: Double = neighbour.getAs[Double](name)
+    val diff: Double = rc - lc
+    val gap: Double = rand.nextFloat()
+    val newValue: Double = lc + (gap * diff)
+    update(base, name, newValue)
+  }
+
+  private[sparkutil] def setDiscreteAttribute[T](name: String, base: Row, neighbour: Row)
+                                                (implicit rand: Random): Row = {
+    val ld = base.getAs[T](name)
+    val rd = neighbour.getAs[T](name)
+    val newValue = rand.nextInt(2) match {
+      case 0 => ld
+      case _ => rd
+    }
+    update(base, name, newValue)
+  }
 }
