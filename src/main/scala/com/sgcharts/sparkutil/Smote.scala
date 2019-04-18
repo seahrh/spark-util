@@ -26,6 +26,8 @@ final case class Smote(
 
   private implicit val rand: Random = new Random
 
+  private val numPartitions: Int = sample.rdd.getNumPartitions
+
   private val featuresCol: String = "_smote_features"
 
   private val allAttributes: Seq[String] =
@@ -105,9 +107,9 @@ final case class Smote(
     val t: DataFrame = transform()
     val model: BucketedRandomProjectionLSHModel = lsh.fit(t)
     // merge into 1 partition for less network cost in approxNearestNeighbors
-    val lshDf: DataFrame = model.transform(t).coalesce(1)
+    val lshDf: DataFrame = model.transform(t).coalesce(numPartitions)
     val schema = lshDf.schema
-    log.info(s"lshDf.count=${lshDf.count}\nlshDf.schema=$schema")
+    log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=$schema")
     val rows: Array[Row] = lshDf.collect()
     val res: ArrayBuffer[Row] = ArrayBuffer()
     for (row <- rows) {
