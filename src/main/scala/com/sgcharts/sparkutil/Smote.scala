@@ -135,7 +135,7 @@ object Smote {
     val lc: Double = base.getAs[Double](name)
     val rc: Double = neighbour.getAs[Double](name)
     val diff: Double = rc - lc
-    val gap: Double = rand.nextFloat()
+    val gap: Double = rand.nextDouble()
     val newValue: Double = lc + (gap * diff)
     update(base, name, newValue)
   }

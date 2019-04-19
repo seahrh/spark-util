@@ -218,6 +218,56 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     )(spark).syntheticSample
     assertResult(in.length * sizeMultiplier)(a.count)
   }
+
+  it should "return the correct output size, when the input size is 1" in {
+    val sizeMultiplier: Int = 2
+    val a: DataFrame = Smote(
+      sample = sampleWithOneRow.toDF,
+      discreteStringAttributes = Seq.empty[String], // excluded because there must be at least 2 distinct values
+      discreteLongAttributes = Seq.empty[String], // excluded because there must be at least 2 distinct values
+      continuousAttributes = Seq[String]("d1", "d2"),
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    assertResult(sampleWithOneRow.length * sizeMultiplier)(a.count)
+  }
+
+  it should "create synthetic values of selected attributes" in {
+    // discrete Long attribute cannot be a negative number
+    // output can possibly have duplicates of input data
+    val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
+    val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
+    val in = Seq[SmoteSpecSchema](left, right)
+    val sizeMultiplier: Int = 10
+    val res: DataFrame = Smote(
+      sample = in.toDF,
+      discreteStringAttributes = Seq[String]("s1", "s2"),
+      discreteLongAttributes = Seq[String]("l1", "l2"),
+      continuousAttributes = Seq[String]("d1", "d2"),
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    for (row <- res.collect) {
+      val a = SmoteSpecSchema.from(row)
+      assert(a.s1 == left.s1 || a.s1 == right.s1)
+      assert(a.s2 == left.s2 || a.s2 == right.s2)
+      assert(a.l1 == left.l1 || a.l1 == right.l1)
+      assert(a.l2 == left.l2 || a.l2 == right.l2)
+      assert(a.d1 >= right.d1 && a.d1 <= left.d1)
+      assert(a.d2 >= left.d2 && a.d2 <= right.d2)
+    }
+  }
 }
 
 private final case class SmoteSpecSchema(s1: String, s2: String, l1: Long, l2: Long, d1: Double, d2: Double)
+
+private object SmoteSpecSchema {
+  private[sparkutil] def from(row : Row): SmoteSpecSchema = {
+    SmoteSpecSchema(
+      s1 = row.getAs[String]("s1"),
+      s2 = row.getAs[String]("s2"),
+      l1 = row.getAs[Long]("l1"),
+      l2 = row.getAs[Long]("l2"),
+      d1 = row.getAs[Double]("d1"),
+      d2 = row.getAs[Double]("d2")
+    )
+  }
+}
