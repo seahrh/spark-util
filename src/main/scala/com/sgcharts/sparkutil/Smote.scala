@@ -103,10 +103,11 @@ final case class Smote(
     res
   }
 
-  def syntheticSample(): DataFrame = {
+  def syntheticSample: DataFrame = {
     val t: DataFrame = transform()
     val model: BucketedRandomProjectionLSHModel = lsh.fit(t)
-    // merge into 1 partition for less network cost in approxNearestNeighbors
+    // merge into as few partitions as possible
+    // because this incurs less network cost in approxNearestNeighbors
     val lshDf: DataFrame = model.transform(t).coalesce(numPartitions)
     val schema = lshDf.schema
     log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=$schema")
@@ -119,7 +120,7 @@ final case class Smote(
         key = key,
         numNearestNeighbors = numNearestNeighbours
       ).toDF().collect()
-      for (_ <- 1 until sizeMultiplier) {
+      for (_ <- 0 until sizeMultiplier) {
         val nn: Row = knn(rand.nextInt(knn.length))
         res += syntheticExample(row, nn)
       }

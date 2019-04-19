@@ -1,7 +1,7 @@
 package com.sgcharts.sparkutil
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
-import org.apache.spark.sql.Row
+import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.FlatSpec
 
 import scala.util.Random
@@ -201,6 +201,22 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
       i += 1
     }
     assert(leftSeen && rightSeen)
+  }
+
+  "Smote#syntheticSample" should "return the correct output size" in {
+    val in: Seq[SmoteSpecSchema] = Seq(
+      SmoteSpecSchema(s1 = "a", s2 = "b", l1 = 1, l2 = 2, d1 = 0.1, d2 = 0.2),
+      SmoteSpecSchema(s1 = "c", s2 = "d", l1 = 3, l2 = 4, d1 = 0.3, d2 = 0.4)
+    )
+    val sizeMultiplier: Int = 2
+    val a: DataFrame = Smote(
+      sample = in.toDF,
+      discreteStringAttributes = Seq[String]("s1", "s2"),
+      discreteLongAttributes = Seq[String]("l1", "l2"),
+      continuousAttributes = Seq[String]("d1", "d2"),
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    assertResult(in.length * sizeMultiplier)(a.count)
   }
 }
 
