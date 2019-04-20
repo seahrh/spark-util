@@ -4,3 +4,4 @@ project/target/
 *.iml
 *.class
 *.log
+.DS_Store

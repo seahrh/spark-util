@@ -1,6 +1,7 @@
 package com.sgcharts.sparkutil
 
 import com.holdenkarau.spark.testing.DataFrameSuiteBase
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Row}
 import org.scalatest.FlatSpec
 
@@ -231,13 +232,13 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     assertResult(sampleWithOneRow.length * sizeMultiplier)(a.count)
   }
 
-  it should "create synthetic values of selected attributes" in {
+  it should "create synthetic values and the right schema, when all attributes are selected" in {
     // discrete Long attribute cannot be a negative number
     // output can possibly have duplicates of input data
     val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
     val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
     val in = Seq[SmoteSpecSchema](left, right)
-    val sizeMultiplier: Int = 10
+    val sizeMultiplier: Int = 50
     val res: DataFrame = Smote(
       sample = in.toDF,
       discreteStringAttributes = Seq[String]("s1", "s2"),
@@ -254,6 +255,70 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
       assert(a.d1 >= right.d1 && a.d1 <= left.d1)
       assert(a.d2 >= left.d2 && a.d2 <= right.d2)
     }
+    assertResult(SmoteSpecSchema.schema)(res.schema)
+  }
+
+  it should "create synthetic values and the right schema, when a single discrete String attribute is selected" in {
+    val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
+    val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
+    val in = Seq[SmoteSpecSchema](left, right)
+    val sizeMultiplier: Int = 50
+    val res: DataFrame = Smote(
+      sample = in.toDF,
+      discreteStringAttributes = Seq[String]("s2"),
+      discreteLongAttributes = Seq.empty[String],
+      continuousAttributes = Seq.empty[String],
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    for (row <- res.collect) {
+      val a = row.getAs[String]("s2")
+      assert(a == left.s2 || a == right.s2)
+    }
+    assertResult(StructType(Seq(
+      StructField("s2", StringType, nullable = true)
+    )))(res.schema)
+  }
+
+  it should "create synthetic values and the right schema, when a single discrete Long attribute is selected" in {
+    val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
+    val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
+    val in = Seq[SmoteSpecSchema](left, right)
+    val sizeMultiplier: Int = 50
+    val res: DataFrame = Smote(
+      sample = in.toDF,
+      discreteStringAttributes = Seq.empty[String],
+      discreteLongAttributes = Seq[String]("l2"),
+      continuousAttributes = Seq.empty[String],
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    for (row <- res.collect) {
+      val a = row.getAs[Long]("l2")
+      assert(a == left.l2 || a == right.l2)
+    }
+    assertResult(StructType(Seq(
+      StructField("l2", LongType, nullable = false)
+    )))(res.schema)
+  }
+
+  it should "create synthetic values and the right schema, when a single continuous attribute is selected" in {
+    val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
+    val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
+    val in = Seq[SmoteSpecSchema](left, right)
+    val sizeMultiplier: Int = 50
+    val res: DataFrame = Smote(
+      sample = in.toDF,
+      discreteStringAttributes = Seq.empty[String],
+      discreteLongAttributes = Seq.empty[String],
+      continuousAttributes = Seq[String]("d2"),
+      sizeMultiplier = sizeMultiplier
+    )(spark).syntheticSample
+    for (row <- res.collect) {
+      val a = row.getAs[Double]("d2")
+      assert(a >= left.d2 && a <= right.d2)
+    }
+    assertResult(StructType(Seq(
+      StructField("d2", DoubleType, nullable = false)
+    )))(res.schema)
   }
 }
 
@@ -270,4 +335,13 @@ private object SmoteSpecSchema {
       d2 = row.getAs[Double]("d2")
     )
   }
+
+  private[sparkutil] val schema: StructType = StructType(Seq(
+    StructField("s1", StringType, nullable = true),
+    StructField("s2", StringType, nullable = true),
+    StructField("l1", LongType, nullable = false),
+    StructField("l2", LongType, nullable = false),
+    StructField("d1", DoubleType, nullable = false),
+    StructField("d2", DoubleType, nullable = false)
+  ))
 }
