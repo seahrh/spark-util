@@ -2,8 +2,10 @@ package com.sgcharts.sparkutil
 
 import org.apache.spark.ml
 import org.apache.spark.ml.feature._
-import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.{Pipeline, PipelineStage}
+import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 import scala.collection.mutable.ArrayBuffer
@@ -34,6 +36,14 @@ final case class Smote(
     discreteStringAttributes ++ discreteLongAttributes ++ continuousAttributes
 
   require(allAttributes.nonEmpty, "there must be at least one attribute")
+
+  private val outSchema: StructType = StructType(
+    discreteStringAttributes.map(x => StructField(x, StringType, nullable = true))
+      ++ discreteLongAttributes.map(x => StructField(x, LongType, nullable = false))
+      ++ continuousAttributes.map(x => StructField(x, DoubleType, nullable = false))
+  )
+
+  implicit private val encoder: ExpressionEncoder[Row] = RowEncoder(outSchema)
 
   private val blen: Double = bucketLength match {
     case Some(x) =>
@@ -103,30 +113,77 @@ final case class Smote(
     res
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
   def syntheticSample: DataFrame = {
     val t: DataFrame = transform()
     val model: BucketedRandomProjectionLSHModel = lsh.fit(t)
-    // merge into as few partitions as possible
+    // TODO remove! merge into as few partitions as possible
     // because this incurs less network cost in approxNearestNeighbors
     val lshDf: DataFrame = model.transform(t).coalesce(numPartitions)
     val schema = lshDf.schema
     log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=$schema")
-    val rows: Array[Row] = lshDf.collect()
-    val res: ArrayBuffer[Row] = ArrayBuffer()
-    for (row <- rows) {
-      val key: Vector = row.getAs[Vector](featuresCol)
-      val knn: Array[Row] = model.approxNearestNeighbors(
-        dataset = lshDf,
-        key = key,
-        numNearestNeighbors = numNearestNeighbours
-      ).toDF().collect()
+    val distCol: String = "_smote_distance"
+    val keyCols: Seq[String] = allAttributes map (x => s"key_$x")
+    val columnIndices: Seq[Int] = Seq.range(1, 2 * allAttributes.length + 1)
+    val sql: String =
+      s"""
+         |select ${keyCols mkString ","}
+         |,${allAttributes.map(x => s"$x) $x").mkString("COLLECT_LIST(", ",COLLECT_LIST(", "")}
+         |from (
+         |select ${keyCols mkString ","}
+         |,${allAttributes mkString ","}
+         |,ROW_NUMBER() OVER (PARTITION BY ${keyCols mkString ","} ORDER BY $distCol) as rank
+         |from (
+         |select ${allAttributes map (x => s"datasetA.$x key_$x") mkString ","}
+         |,${allAttributes map (x => s"datasetB.$x $x") mkString ","}
+         |,avg($distCol) $distCol
+         |from _smote_similarity_matrix_raw
+         |group by ${columnIndices mkString ","}
+         |) t1 ) t2
+         |where rank<=$numNearestNeighbours
+         |group by ${keyCols mkString ","}
+       """.stripMargin
+    //println(sql)
+    model.approxSimilarityJoin(lshDf, lshDf, threshold = Double.MaxValue, distCol = distCol)
+      .createOrReplaceTempView("_smote_similarity_matrix_raw")
+    val knn: DataFrame = spark.sql(sql)
+
+    knn.printSchema
+
+    knn flatMap { row =>
+      val arr: ArrayBuffer[Row] = ArrayBuffer()
       for (_ <- 0 until sizeMultiplier) {
-        val nn: Row = knn(rand.nextInt(knn.length))
-        res += syntheticExample(row, nn)
+        val i: Int = allAttributes.headOption match {
+          case Some(a) => rand.nextInt(row.getAs[Seq[Any]](a).length)
+          case _ => 0
+        }
+        var vs: ArrayBuffer[Any] = ArrayBuffer()
+        for (a <- discreteStringAttributes) {
+          vs += row.getAs[Seq[String]](a)(i)
+        }
+        for (a <- discreteLongAttributes) {
+          vs += row.getAs[Seq[Long]](a)(i)
+        }
+        for (a <- continuousAttributes) {
+          vs += row.getAs[Seq[Double]](a)(i)
+        }
+        val neighbour: Row = new GenericRowWithSchema(vs.toArray, outSchema)
+        vs = ArrayBuffer()
+        for (a <- discreteStringAttributes) {
+          vs += row.getAs[String](s"key_$a")
+        }
+        for (a <- discreteLongAttributes) {
+          vs += row.getAs[Long](s"key_$a")
+        }
+        for (a <- continuousAttributes) {
+          vs += row.getAs[Double](s"key_$a")
+        }
+        val self: Row = new GenericRowWithSchema(vs.toArray, outSchema)
+        arr += syntheticExample(self, neighbour)
       }
+      arr
     }
-    toDF(res.toArray, schema).selectExpr(allAttributes: _*)
-  }
+  }.selectExpr(allAttributes: _*)
 }
 
 object Smote {
