@@ -1,53 +1,59 @@
-lazy val root = (project in file(".")).
-  settings(
-    inThisBuild(List(
-      organization := "com.sgcharts",
-      scalaVersion := "2.11.12",
-      version := "0.4.0-SNAPSHOT"
-    )),
-    name := "spark-util",
-    libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % versions.scalatest % Test,
-      "org.apache.spark" %% "spark-sql" % versions.spark % Provided,
-      "org.apache.spark" %% "spark-hive" % versions.spark % Test,
-      "org.apache.spark" %% "spark-mllib" % versions.spark % Provided,
-      "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
-    ),
-    // release settings
-    homepage := Option(url("https://github.com/seahrh/spark-util")),
-    licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
-    publishMavenStyle := true,
-    useGpg := true,
-    publishArtifact in Test := false,
-    pomIncludeRepository := { _ => false },
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value) {
-        Option("snapshots" at nexus + "content/repositories/snapshots")
-      } else {
-        Option("releases" at nexus + "service/local/staging/deploy/maven2")
-      }
-    },
-    scmInfo := Some(
-      ScmInfo(
-        browseUrl = url("https://github.com/seahrh/spark-util"),
-        connection = "scm:git:git@github.com:seahrh/spark-util.git"
-      )
-    ),
-    developers := List(
-      Developer(
-        id = "seahrh",
-        name = "Seah Ru Hong",
-        email = "admin@sgcharts.com",
-        url = url("https://www.sgcharts.com"))
-    ),
-    description := "Utility for common use cases and bug workarounds for Apache Spark 2"
-  )
+import sbt.url
+
+lazy val inThisBuildSettings = Seq(
+  organization := "com.sgcharts",
+  scalaVersion := "2.11.12",
+  version := "0.4.0-SNAPSHOT"
+)
+lazy val releaseSettings = Seq(
+  homepage := Option(url("https://github.com/seahrh/spark-util")),
+  licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
+  publishMavenStyle := true,
+  useGpg := true,
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value) {
+      Option("snapshots" at nexus + "content/repositories/snapshots")
+    } else {
+      Option("releases" at nexus + "service/local/staging/deploy/maven2")
+    }
+  },
+  scmInfo := Some(
+    ScmInfo(
+      browseUrl = url("https://github.com/seahrh/spark-util"),
+      connection = "scm:git:git@github.com:seahrh/spark-util.git"
+    )
+  ),
+  developers := List(
+    Developer(
+      id = "seahrh",
+      name = "Seah Ru Hong",
+      email = "admin@sgcharts.com",
+      url = url("https://www.sgcharts.com"))
+  ),
+  description := "Utility for common use cases and bug workarounds for Apache Spark 2"
+)
 lazy val versions = new {
   val scalatest = "3.0.7"
   val spark = "2.4.0"
   val sparkTestingBase = "2.4.0_0.11.0"
 }
+lazy val dependencies = Seq(
+  "org.scalatest" %% "scalatest" % versions.scalatest % Test,
+  "org.apache.spark" %% "spark-sql" % versions.spark % Provided,
+  "org.apache.spark" %% "spark-hive" % versions.spark % Test,
+  "org.apache.spark" %% "spark-mllib" % versions.spark % Provided,
+  "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
+)
+lazy val root = (project in file(".")).
+  settings(
+    inThisBuild(inThisBuildSettings),
+    name := "spark-util",
+    libraryDependencies ++= dependencies
+  )
+  .settings(releaseSettings: _*)
 wartremoverErrors ++= Warts.allBut(
   Wart.ToString,
   Wart.Throw,

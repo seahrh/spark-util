@@ -2,7 +2,7 @@
 //addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
 addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 
-// facilitate the publishing process
+// automate the staging -> release workflow of Nexus
 // the sbt-sonatype plugin can also be used to publish to other non-sonatype repositories
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.0")
 
