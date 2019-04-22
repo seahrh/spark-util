@@ -182,7 +182,7 @@ final case class Smote(
   }
 
   def syntheticSample: DataFrame = {
-    val keyColumnPrefix: String = "key_"
+    val keyColumnPrefix: String = "_smote_key_"
     val knn: DataFrame = nearestNeighbours(keyColumnPrefix)
     knn flatMap { row =>
       val arr: ArrayBuffer[Row] = ArrayBuffer()
