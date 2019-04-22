@@ -11,7 +11,6 @@ lazy val publishSettings = Seq(
   homepage := Option(url(s"https://github.com/$user/$artifact")),
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
   publishMavenStyle := true,
-  useGpg := true,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
   publishTo := {
