@@ -13,8 +13,9 @@ lazy val root = (project in file(".")).
       "org.apache.spark" %% "spark-mllib" % versions.spark % Provided,
       "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
     ),
+    // release settings
     homepage := Option(url("https://github.com/seahrh/spark-util")),
-    licenses := Seq("MIT" -> url("https://github.com/seahrh/spark-util/blob/master/LICENSE")),
+    licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
     publishMavenStyle := true,
     useGpg := true,
     publishArtifact in Test := false,
@@ -29,12 +30,16 @@ lazy val root = (project in file(".")).
     },
     scmInfo := Some(
       ScmInfo(
-        url("https://github.com/seahrh/spark-util"),
-        "scm:git:git@github.com:seahrh/spark-util.git"
+        browseUrl = url("https://github.com/seahrh/spark-util"),
+        connection = "scm:git:git@github.com:seahrh/spark-util.git"
       )
     ),
     developers := List(
-      Developer("seahrh", "Seah Ru Hong", "admin@sgcharts.com", url("https://www.sgcharts.com"))
+      Developer(
+        id = "seahrh",
+        name = "Seah Ru Hong",
+        email = "admin@sgcharts.com",
+        url = url("https://www.sgcharts.com"))
     ),
     description := "Utility for common use cases and bug workarounds for Apache Spark 2"
   )
