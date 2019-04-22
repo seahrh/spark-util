@@ -3,7 +3,7 @@ lazy val root = (project in file(".")).
     inThisBuild(List(
       organization := "com.sgcharts",
       scalaVersion := "2.11.12",
-      version      := "0.4.0"
+      version := "0.4.0"
     )),
     name := "spark-util",
     libraryDependencies ++= Seq(
@@ -12,7 +12,31 @@ lazy val root = (project in file(".")).
       "org.apache.spark" %% "spark-hive" % versions.spark % Test,
       "org.apache.spark" %% "spark-mllib" % versions.spark % Provided,
       "com.holdenkarau" %% "spark-testing-base" % versions.sparkTestingBase % Test
-    )
+    ),
+    homepage := Option(url("https://github.com/seahrh/spark-util")),
+    licenses := Seq("MIT" -> url("https://github.com/seahrh/spark-util/blob/master/LICENSE")),
+    publishMavenStyle := true,
+    useGpg := true,
+    publishArtifact in Test := false,
+    pomIncludeRepository := { _ => false },
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value) {
+        Option("snapshots" at nexus + "content/repositories/snapshots")
+      } else {
+        Option("releases" at nexus + "service/local/staging/deploy/maven2")
+      }
+    },
+    scmInfo := Some(
+      ScmInfo(
+        url("https://github.com/seahrh/spark-util"),
+        "scm:git:git@github.com:seahrh/spark-util.git"
+      )
+    ),
+    developers := List(
+      Developer("seahrh", "Seah Ru Hong", "admin@sgcharts.com", url("https://www.sgcharts.com"))
+    ),
+    description := "Utility for common use cases and bug workarounds for Apache Spark 2"
   )
 lazy val versions = new {
   val scalatest = "3.0.7"
