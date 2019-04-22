@@ -19,14 +19,18 @@ final case class Smote(
                         bucketLength: Option[Double] = None,
                         numHashTables: Int = 1,
                         sizeMultiplier: Int = 2,
-                        numNearestNeighbours: Int = 4
+                        numNearestNeighbours: Int = 4,
+                        seed: Option[Int] = None
                       )(implicit spark: SparkSession) extends Log4jLogging {
   require(sample.count != 0, "sample must not be empty")
   require(numHashTables >= 1, "number of hash tables must be greater than or equals 1")
   require(sizeMultiplier >= 2, "size multiplier must be greater than or equals 2")
   require(numNearestNeighbours >= 1, "number of nearest neighbours must be greater than or equals 1")
 
-  private implicit val rand: Random = new Random
+  private implicit val rand: Random = seed match {
+    case Some(s) => new Random(s)
+    case _ => new Random()
+  }
 
   private val featuresCol: String = "_smote_features"
 
