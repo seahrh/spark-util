@@ -1,12 +1,14 @@
 import sbt.url
 
-lazy val inThisBuildSettings = Seq(
+lazy val user = "seahrh"
+lazy val artifact = "spark-util"
+lazy val thisBuildSettings = Seq(
   organization := "com.sgcharts",
   scalaVersion := "2.11.12",
-  version := "0.4.0-SNAPSHOT"
+  version := "0.4.0"
 )
-lazy val releaseSettings = Seq(
-  homepage := Option(url("https://github.com/seahrh/spark-util")),
+lazy val publishSettings = Seq(
+  homepage := Option(url(s"https://github.com/$user/$artifact")),
   licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
   publishMavenStyle := true,
   useGpg := true,
@@ -22,13 +24,13 @@ lazy val releaseSettings = Seq(
   },
   scmInfo := Some(
     ScmInfo(
-      browseUrl = url("https://github.com/seahrh/spark-util"),
-      connection = "scm:git:git@github.com:seahrh/spark-util.git"
+      browseUrl = url(s"https://github.com/$user/$artifact"),
+      connection = s"scm:git:git@github.com:$user/$artifact.git"
     )
   ),
   developers := List(
     Developer(
-      id = "seahrh",
+      id = user,
       name = "Seah Ru Hong",
       email = "admin@sgcharts.com",
       url = url("https://www.sgcharts.com"))
@@ -49,11 +51,11 @@ lazy val dependencies = Seq(
 )
 lazy val root = (project in file(".")).
   settings(
-    inThisBuild(inThisBuildSettings),
-    name := "spark-util",
+    inThisBuild(thisBuildSettings),
+    name := artifact,
     libraryDependencies ++= dependencies
   )
-  .settings(releaseSettings: _*)
+  .settings(publishSettings: _*)
 wartremoverErrors ++= Warts.allBut(
   Wart.ToString,
   Wart.Throw,
