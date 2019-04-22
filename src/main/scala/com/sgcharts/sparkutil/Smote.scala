@@ -28,8 +28,6 @@ final case class Smote(
 
   private implicit val rand: Random = new Random
 
-  private val numPartitions: Int = sample.rdd.getNumPartitions
-
   private val featuresCol: String = "_smote_features"
 
   private val allAttributes: Seq[String] =
@@ -92,7 +90,7 @@ final case class Smote(
     .setBucketLength(blen)
     .setNumHashTables(numHashTables)
 
-  private def transform(): DataFrame = {
+  private val preprocessed: DataFrame = {
     val stages: Seq[PipelineStage] = stringIndexers ++ Seq(oneHotEncoder, assembler)
     val pipe = new Pipeline().setStages(stages.toArray)
     val model: ml.PipelineModel = pipe.fit(sample)
@@ -113,42 +111,48 @@ final case class Smote(
     res
   }
 
-  @SuppressWarnings(Array("org.wartremover.warts.Any"))
-  def syntheticSample: DataFrame = {
-    val t: DataFrame = transform()
-    val model: BucketedRandomProjectionLSHModel = lsh.fit(t)
-    // TODO remove! merge into as few partitions as possible
-    // because this incurs less network cost in approxNearestNeighbors
-    val lshDf: DataFrame = model.transform(t).coalesce(numPartitions)
-    val schema = lshDf.schema
-    log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=$schema")
+  private def nearestNeighbours: DataFrame = {
+    val model: BucketedRandomProjectionLSHModel = lsh.fit(preprocessed)
+    val lshDf: DataFrame = model.transform(preprocessed)
+    log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=${lshDf.schema}")
     val distCol: String = "_smote_distance"
-    val keyCols: Seq[String] = allAttributes map (x => s"key_$x")
-    val columnIndices: Seq[Int] = Seq.range(1, 2 * allAttributes.length + 1)
+    val keyColumnPrefix: String = "key_"
+    val keyCols: String = allAttributes map (x => s"$keyColumnPrefix$x") mkString ","
+    val columnIndices: String = Seq.range(1, 2 * allAttributes.length + 1) mkString ","
+    val collectListCols: String = allAttributes.map(x => s"$x) $x").mkString(
+      "COLLECT_LIST(", ",COLLECT_LIST(", "")
+    val datasetACols: String = allAttributes map (x => s"datasetA.$x $keyColumnPrefix$x") mkString ","
+    val datasetBCols: String = allAttributes map (x => s"datasetB.$x $x") mkString ","
+    val viewName: String = "_smote_similarity_matrix_raw"
     val sql: String =
       s"""
-         |select ${keyCols mkString ","}
-         |,${allAttributes.map(x => s"$x) $x").mkString("COLLECT_LIST(", ",COLLECT_LIST(", "")}
+         |select $keyCols
+         |,$collectListCols
          |from (
-         |select ${keyCols mkString ","}
+         |select $keyCols
          |,${allAttributes mkString ","}
-         |,ROW_NUMBER() OVER (PARTITION BY ${keyCols mkString ","} ORDER BY $distCol) as rank
+         |,ROW_NUMBER() OVER (PARTITION BY $keyCols ORDER BY $distCol) as rank
          |from (
-         |select ${allAttributes map (x => s"datasetA.$x key_$x") mkString ","}
-         |,${allAttributes map (x => s"datasetB.$x $x") mkString ","}
+         |select $datasetACols
+         |,$datasetBCols
          |,avg($distCol) $distCol
-         |from _smote_similarity_matrix_raw
-         |group by ${columnIndices mkString ","}
+         |from $viewName
+         |group by $columnIndices
          |) t1 ) t2
          |where rank<=$numNearestNeighbours
-         |group by ${keyCols mkString ","}
+         |group by $keyCols
        """.stripMargin
-    //println(sql)
+    log.trace(sql)
     model.approxSimilarityJoin(lshDf, lshDf, threshold = Double.MaxValue, distCol = distCol)
-      .createOrReplaceTempView("_smote_similarity_matrix_raw")
-    val knn: DataFrame = spark.sql(sql)
+      .createOrReplaceTempView(viewName)
+    spark.sql(sql)
+  }
 
-    knn.printSchema
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  def syntheticSample: DataFrame = {
+    val knn: DataFrame = nearestNeighbours
+
+    //knn.printSchema()
 
     knn flatMap { row =>
       val arr: ArrayBuffer[Row] = ArrayBuffer()
