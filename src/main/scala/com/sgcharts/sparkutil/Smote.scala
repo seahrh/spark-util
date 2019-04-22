@@ -111,12 +111,11 @@ final case class Smote(
     res
   }
 
-  private def nearestNeighbours: DataFrame = {
+  private def nearestNeighbours(keyColumnPrefix: String): DataFrame = {
     val model: BucketedRandomProjectionLSHModel = lsh.fit(preprocessed)
     val lshDf: DataFrame = model.transform(preprocessed)
     log.trace(s"lshDf.count=${lshDf.count}\nlshDf.schema=${lshDf.schema}")
     val distCol: String = "_smote_distance"
-    val keyColumnPrefix: String = "key_"
     val keyCols: String = allAttributes map (x => s"$keyColumnPrefix$x") mkString ","
     val columnIndices: String = Seq.range(1, 2 * allAttributes.length + 1) mkString ","
     val collectListCols: String = allAttributes.map(x => s"$x) $x").mkString(
@@ -149,41 +148,49 @@ final case class Smote(
   }
 
   @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  private def neighbour(row: Row): Row = {
+    val i: Int = allAttributes.headOption match {
+      case Some(a) => rand.nextInt(row.getAs[Seq[Any]](a).length)
+      case _ => 0
+    }
+    val vs: ArrayBuffer[Any] = ArrayBuffer()
+    for (a <- discreteStringAttributes) {
+      vs += row.getAs[Seq[String]](a)(i)
+    }
+    for (a <- discreteLongAttributes) {
+      vs += row.getAs[Seq[Long]](a)(i)
+    }
+    for (a <- continuousAttributes) {
+      vs += row.getAs[Seq[Double]](a)(i)
+    }
+    new GenericRowWithSchema(vs.toArray, outSchema)
+  }
+
+  @SuppressWarnings(Array("org.wartremover.warts.Any"))
+  private def key(row: Row, keyColumnPrefix: String): Row = {
+    val vs: ArrayBuffer[Any] = ArrayBuffer()
+    for (a <- discreteStringAttributes) {
+      vs += row.getAs[String](s"$keyColumnPrefix$a")
+    }
+    for (a <- discreteLongAttributes) {
+      vs += row.getAs[Long](s"$keyColumnPrefix$a")
+    }
+    for (a <- continuousAttributes) {
+      vs += row.getAs[Double](s"$keyColumnPrefix$a")
+    }
+    new GenericRowWithSchema(vs.toArray, outSchema)
+  }
+
   def syntheticSample: DataFrame = {
-    val knn: DataFrame = nearestNeighbours
-
-    //knn.printSchema()
-
+    val keyColumnPrefix: String = "key_"
+    val knn: DataFrame = nearestNeighbours(keyColumnPrefix)
     knn flatMap { row =>
       val arr: ArrayBuffer[Row] = ArrayBuffer()
       for (_ <- 0 until sizeMultiplier) {
-        val i: Int = allAttributes.headOption match {
-          case Some(a) => rand.nextInt(row.getAs[Seq[Any]](a).length)
-          case _ => 0
-        }
-        var vs: ArrayBuffer[Any] = ArrayBuffer()
-        for (a <- discreteStringAttributes) {
-          vs += row.getAs[Seq[String]](a)(i)
-        }
-        for (a <- discreteLongAttributes) {
-          vs += row.getAs[Seq[Long]](a)(i)
-        }
-        for (a <- continuousAttributes) {
-          vs += row.getAs[Seq[Double]](a)(i)
-        }
-        val neighbour: Row = new GenericRowWithSchema(vs.toArray, outSchema)
-        vs = ArrayBuffer()
-        for (a <- discreteStringAttributes) {
-          vs += row.getAs[String](s"key_$a")
-        }
-        for (a <- discreteLongAttributes) {
-          vs += row.getAs[Long](s"key_$a")
-        }
-        for (a <- continuousAttributes) {
-          vs += row.getAs[Double](s"key_$a")
-        }
-        val self: Row = new GenericRowWithSchema(vs.toArray, outSchema)
-        arr += syntheticExample(self, neighbour)
+        arr += syntheticExample(
+          base = key(row, keyColumnPrefix),
+          neighbour = neighbour(row)
+        )
       }
       arr
     }
