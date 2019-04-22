@@ -1,5 +1,6 @@
 // The plugin is a solution to sign artifacts. It works with the GPG command line tool.
-addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+//addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+addSbtPlugin("io.crashbox" % "sbt-gpg" % "0.2.0")
 
 // facilitate the publishing process
 // the sbt-sonatype plugin can also be used to publish to other non-sonatype repositories
