@@ -6,15 +6,16 @@ scala:
 sudo: false
 script:
   - sbt clean test
+before_deploy:
+  - gpg --import key.asc
 deploy:
   - provider: script
     skip_cleanup: true
-    before_script: gpg --import key.asc
     script: sbt publish
     on:
       all_branches: true
       tags: true
-      condition: "$TRAVIS_TAG =~ ^\d+\.\d+\.\d+.*$"
+      condition: $TRAVIS_TAG =~ ^\d+\.\d+\.\d+.*$
 cache:
   directories:
     - $HOME/.ivy2/cache
