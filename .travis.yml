@@ -14,7 +14,7 @@ deploy:
     on:
       all_branches: true
       tag: true
-      condition: "$TRAVIS_TAG =~ ^\d+\.\d+\.\d+$"
+      condition: "$TRAVIS_TAG =~ ^\d+\.\d+\.\d+.*$"
 cache:
   directories:
     - $HOME/.ivy2/cache
