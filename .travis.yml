@@ -6,10 +6,12 @@ scala:
 sudo: false
 script:
   - sbt clean test
+before_deploy:
+  - chmod +x .ci/publish.sh
 deploy:
   - provider: script
     skip_cleanup: true
-    script: chmod +x .ci/publish.sh && .ci/publish.sh
+    script: .ci/publish.sh
     on:
       all_branches: true
       tags: true
