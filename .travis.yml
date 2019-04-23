@@ -4,6 +4,17 @@ scala:
   - "2.11.12"
 # Use container-based infrastructure
 sudo: false
+script:
+  - sbt clean test
+deploy:
+  - provider: script
+    skip_cleanup: true
+    before_script: gpg --import key.asc
+    script: sbt publish
+    on:
+      all_branches: true
+      tag: true
+      condition: "$TRAVIS_TAG =~ ^\d+\.\d+\.\d+$"
 cache:
   directories:
     - $HOME/.ivy2/cache
@@ -12,5 +23,3 @@ before_cache:
   # Cleanup the cached directories to avoid unnecessary cache updates
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
   - find $HOME/.sbt        -name "*.lock"               -print -delete
-script:
-  - sbt clean test
