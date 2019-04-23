@@ -4,19 +4,7 @@ scala:
   - "2.11.12"
 # Use container-based infrastructure
 sudo: false
-script:
-  - sbt clean test
-before_deploy:
-  - openssl aes-256-cbc -K $encrypted_c5bb60cb91b9_key -iv $encrypted_c5bb60cb91b9_iv -in key.asc.enc -out key.asc -d
-  - gpg --import key.asc
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: sbt publish
-    on:
-      all_branches: true
-      tags: true
-      condition: $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$
+script: .ci/build.sh
 cache:
   directories:
     - $HOME/.ivy2/cache
