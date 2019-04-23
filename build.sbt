@@ -27,6 +27,10 @@ lazy val publishSettings = Seq(
       connection = s"scm:git:git@github.com:$user/$artifact.git"
     )
   ),
+  credentials ++= (for {
+    username <- sys.env.get("SONATYPE_USERNAME")
+    password <- sys.env.get("SONATYPE_PASSWORD")
+  } yield Credentials("Sonatype Nexus Repository Manager", "oss.sonatype.org", username, password)).toSeq,
   developers := List(
     Developer(
       id = user,
