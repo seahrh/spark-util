@@ -1,16 +1,14 @@
 language: scala
 jdk: oraclejdk8
 scala:
-  - "2.11.12"
-# Use container-based infrastructure
+- 2.11.12
 sudo: false
 script:
-  - .ci/build.sh
+- ".ci/build.sh"
 cache:
   directories:
-    - $HOME/.ivy2/cache
-    - $HOME/.sbt
+  - "$HOME/.ivy2/cache"
+  - "$HOME/.sbt"
 before_cache:
-  # Cleanup the cached directories to avoid unnecessary cache updates
-  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
-  - find $HOME/.sbt        -name "*.lock"               -print -delete
+- find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
+- find $HOME/.sbt        -name "*.lock"               -print -delete
