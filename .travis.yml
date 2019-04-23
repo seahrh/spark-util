@@ -5,17 +5,7 @@ scala:
 # Use container-based infrastructure
 sudo: false
 script:
-  - sbt clean test
-before_deploy:
-  - chmod +x .ci/publish.sh
-deploy:
-  - provider: script
-    skip_cleanup: true
-    script: .ci/publish.sh
-    on:
-      all_branches: true
-      tags: true
-      condition: $TRAVIS_TAG =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$
+  - .ci/build.sh
 cache:
   directories:
     - $HOME/.ivy2/cache

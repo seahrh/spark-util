@@ -27,18 +27,6 @@ lazy val publishSettings = Seq(
       connection = s"scm:git:git@github.com:$user/$artifact.git"
     )
   ),
-  credentials += Credentials(
-    "GnuPG Key ID",
-    "gpg",
-    sys.env.getOrElse("GPG_KEY_ID", ""),
-    "ignored"
-  ),
-  credentials += Credentials(
-    "Sonatype Nexus Repository Manager",
-    "oss.sonatype.org",
-    sys.env.getOrElse("SONATYPE_USERNAME", ""),
-    sys.env.getOrElse("SONATYPE_PASSWORD", "")
-  ),
   developers := List(
     Developer(
       id = user,
