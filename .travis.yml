@@ -9,7 +9,7 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: .ci/publish.sh
+    script: chmod +x .ci/publish.sh && .ci/publish.sh
     on:
       all_branches: true
       tags: true
