@@ -11,7 +11,7 @@ sbt \
 if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
 
     echo "Setup gpg keys"
-    gpg --keyserver keyserver.ubuntu.com --recv-keys "B2BFA790AECB1FF8"
+    gpg --keyserver keyserver.ubuntu.com --recv-keys "91DA4CE25D06E662"
     openssl aes-256-cbc \
 	    -K "$encrypted_c5bb60cb91b9_key" \
 	    -iv "$encrypted_c5bb60cb91b9_iv" \
@@ -25,7 +25,7 @@ if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_TAG" =~ ^[0-9]+\.[0-9]+\.[0-
 	credentials in Global += Credentials(
 	    "GnuPG Key ID",
 	    "gpg",
-	    "B2BFA790AECB1FF8",
+	    "91DA4CE25D06E662",
 	    "ignored"
 	)
 	credentials in Global += Credentials(
