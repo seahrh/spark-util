@@ -238,7 +238,7 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
     val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
     val in = Seq[SmoteSpecSchema](left, right)
-    val sizeMultiplier: Int = 50
+    val sizeMultiplier: Int = 20
     val res: DataFrame = Smote(
       sample = in.toDF,
       discreteStringAttributes = Seq[String]("s1", "s2"),
@@ -262,7 +262,7 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
     val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
     val in = Seq[SmoteSpecSchema](left, right)
-    val sizeMultiplier: Int = 50
+    val sizeMultiplier: Int = 20
     val res: DataFrame = Smote(
       sample = in.toDF,
       discreteStringAttributes = Seq[String]("s2"),
@@ -283,7 +283,7 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
     val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
     val in = Seq[SmoteSpecSchema](left, right)
-    val sizeMultiplier: Int = 50
+    val sizeMultiplier: Int = 20
     val res: DataFrame = Smote(
       sample = in.toDF,
       discreteStringAttributes = Seq.empty[String],
@@ -304,7 +304,7 @@ class SmoteSpec extends FlatSpec with DataFrameSuiteBase {
     val left = SmoteSpecSchema(s1 = "a", s2 = "c", l1 = 1, l2 = 3, d1 = -0.1, d2 = 0.1)
     val right = SmoteSpecSchema(s1 = "b", s2 = "d", l1 = 2, l2 = 4, d1 = -0.2, d2 = 0.2)
     val in = Seq[SmoteSpecSchema](left, right)
-    val sizeMultiplier: Int = 50
+    val sizeMultiplier: Int = 20
     val res: DataFrame = Smote(
       sample = in.toDF,
       discreteStringAttributes = Seq.empty[String],
