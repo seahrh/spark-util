@@ -3,9 +3,7 @@ set -o errexit
 set -o nounset
 set -o verbose
 
-sbt \
-    clean \
-    test
+sbt clean test
 
 # Automatic publishing for tags that have the release pattern like `1.2.3`
 if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
@@ -37,5 +35,5 @@ if [[ "$TRAVIS_PULL_REQUEST" == "false" && "$TRAVIS_TAG" =~ ^[0-9]+\.[0-9]+\.[0-
 	EOF
 
     echo "Publish release"
-    sbt publish
+    sbt publish sonatypeRelease
 fi
