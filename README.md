@@ -14,7 +14,7 @@ Contents
 ## Getting started
 Add the following to your `build.sbt`
 ```scala
-libraryDependencies += "com.sgcharts" %% "spark-util" % "0.4.0"
+libraryDependencies += "com.sgcharts" %% "spark-util" % "0.4.1"
 ```
 ## Handling the imbalanced class problem with SMOTE
 There is a number of ways to deal with the imbalanced class problem
