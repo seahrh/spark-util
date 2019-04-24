@@ -5,7 +5,7 @@ lazy val artifact = "spark-util"
 lazy val thisBuildSettings = Seq(
   organization := "com.sgcharts",
   scalaVersion := "2.11.12",
-  version := "0.4.1-RC1"
+  version := "0.4.1"
 )
 lazy val publishSettings = Seq(
   homepage := Option(url(s"https://github.com/$user/$artifact")),
