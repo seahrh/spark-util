@@ -13,8 +13,10 @@ Contents
 - [Logging](#logging)
 ## Getting started
 Add the following to your `build.sbt`
+
+Latest tag: [![Scaladex](https://index.scala-lang.org/seahrh/spark-util/latest.svg)](https://index.scala-lang.org/seahrh/spark-util)
 ```scala
-libraryDependencies += "com.sgcharts" %% "spark-util" % "0.4.1"
+libraryDependencies += "com.sgcharts" %% "spark-util" % "<latest_tag>"
 ```
 ## Handling the imbalanced class problem with SMOTE
 There is a number of ways to deal with the imbalanced class problem
