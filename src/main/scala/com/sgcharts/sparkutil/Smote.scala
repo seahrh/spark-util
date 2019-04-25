@@ -28,7 +28,7 @@ import scala.util.Random
   *      SMOTE: synthetic minority over-sampling technique. Journal of artificial intelligence research, 16, 321-357.
   * @param sample                   pure minority class sample
   * @param discreteStringAttributes names of discrete attributes with type [[String]]
-  * @param discreteLongAttributes   names of discrete attributes with type [[Long]]
+  * @param discreteLongAttributes   names of discrete attributes with type [[Long]], no negative numbers
   * @param continuousAttributes     names of continuous attributes
   * @param bucketLength             length of each bucket, parameter for [[org.apache.spark.ml.feature.BucketedRandomProjectionLSH]]
   * @param numHashTables            number of hash tables, parameter for [[org.apache.spark.ml.feature.BucketedRandomProjectionLSH]]
