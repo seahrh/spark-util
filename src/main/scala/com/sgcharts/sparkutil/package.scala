@@ -1,8 +1,11 @@
 package com.sgcharts
 
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import java.sql.Timestamp
+
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+
 import scala.collection.JavaConverters._
 
 package object sparkutil extends Log4jLogging {
@@ -22,6 +25,7 @@ package object sparkutil extends Log4jLogging {
   /**
     * DataFrame workaround for Dataset union bug.
     * Union is performed in order of the operands.
+    *
     * @see [[https://issues.apache.org/jira/browse/SPARK-21109]]
     * @param head first DataFrame
     * @param tail varargs of successive DataFrames
@@ -47,5 +51,25 @@ package object sparkutil extends Log4jLogging {
   // based on https://stackoverflow.com/a/40801637/519951
   def toDF(rows: Array[Row], schema: StructType)(implicit spark: SparkSession): DataFrame = {
     spark.createDataFrame(rows.toList.asJava, schema)
+  }
+
+  /**
+    * Parses string to java.sql.Timestamp object, wrapped as Option.
+    * If string cannot be parsed, then return None.
+    *
+    * @param str timestamp string in "yyyy-mm-dd hh:mm:ss[.fffffffff]" format
+    * @return [[Timestamp]] if parsed successfully, else None
+    */
+  def toSqlTimestamp(str: String): Option[Timestamp] = {
+    val t: String = str.trim.replace('T', ' ')
+    if (t.isEmpty || t == "0000-00-00 00:00:00") {
+      None
+    } else {
+      try {
+        Option(Timestamp.valueOf(t))
+      } catch {
+        case _: IllegalArgumentException => None
+      }
+    }
   }
 }
